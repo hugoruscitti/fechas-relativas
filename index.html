@@ -1,0 +1,209 @@
+<html data-theme="dark">
+  <head>
+    <meta charset="utf-8"></meta>
+    <link rel="icon" href="./icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="./pico.css">
+    <link rel="stylesheet" href="./estilo.css?version=2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#1a1a1a">
+    <script src="./fechas-relativas.js?version=2"></script>
+    <script>
+
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js');
+      }
+
+      /*
+       * Cuando el sitio se carga, se intenta recuperar de localStorage
+       * el tema de colores y el texto ingresado por el usuario. Este texto
+       * es el que se utilizará para calcular las fechas relativas y
+       * mostrar la pantala principal.
+       *
+       * Esta función también se encarga de mostrar la primer página de
+       * la aplicación.
+       */
+      document.addEventListener("DOMContentLoaded", function() {
+        const savedTheme = localStorage.getItem('theme');
+
+        if (savedTheme) {
+          document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+
+        if (!localStorage.getItem('texto')) {
+          localStorage.setItem('texto', [
+            "2025-11-28: Un día de ejemplo",
+            "2021-08-10: Otro día",
+            "",
+            "Escribe más lineas como las de arriba",
+            ].join("\n")
+          );
+        }
+
+        // Muestra la primer página de la aplicación
+        const contenedorDePagina = document.querySelector("#pagina"); 
+        contenedorDePagina.innerHTML = "<x-fechas></x-fechas>";
+      });
+
+    </script>
+  </head>
+
+  <body>
+
+  <main class="container-fluid">
+
+
+    <nav>
+      <ul onclick="cuandoCambiaPagina(event); return false">
+        <li><a href="#" data-componente="fechas" class="contrast">Mis fechas</a></li>
+        <li><a href="#" data-componente="editor" class="contrast">Editar</a></li>
+        <li><a href="#" data-componente="configuracion" class="contrast">Configuración</a></li>
+      </ul>
+    </nav>
+
+    <div id="pagina">
+    </div>
+
+
+    <script>
+
+      function cuandoCambiaPagina(event) {
+        const componente = event.target.getAttribute("data-componente");
+        const contenedorDePagina = document.querySelector("#pagina"); 
+
+        switch (componente) {
+          case "fechas":
+            contenedorDePagina.innerHTML = "<x-fechas></x-fechas>";
+            break;
+
+          case "editor":
+            contenedorDePagina.innerHTML = "<x-editor></x-editor>";
+            break; 
+
+          case "configuracion":
+            contenedorDePagina.innerHTML = "<x-configuracion></x-configuracion>";
+            break; 
+
+          default:
+            contenedorDePagina.innerHTML = `Componente desconocido ${componente}`;
+            break
+        }
+
+      }
+
+      class Fechas extends HTMLElement {
+
+        constructor() {
+          super();
+        }
+
+        connectedCallback() {
+          var texto = localStorage.getItem('texto') || "";
+          var lineas = texto.split("\n");
+          var contenedor = this;
+          const hoy = new Date().toISOString().split("T")[0];
+
+          lineas = lineas.filter(e => e.match(/\d+-\d+-\d+: \w+/));
+
+          lineas.map(linea => {
+            const [fecha, detalle] = linea.split(":");
+            const diferencia = obtener_diferencia(fecha, hoy);
+            const barra = graficar_barra(diferencia);
+            const texto = obtener_texto(diferencia);
+            const aniversario = obtener_texto_aniversario(hoy, diferencia);
+
+            let textoAniversario = "";
+
+            if (aniversario) {
+              textoAniversario = `⭐️ ${aniversario} ⭐️`; 
+            }
+
+            const elemento = document.createElement("div")
+            elemento.innerHTML = `
+              <div class="row">
+                <div>${detalle}</div>
+                <div>${fecha}</div>
+                <div>${barra}</div>
+                <div>${texto}</div>
+                <div>${textoAniversario}</div>
+              </div>
+            `;
+
+            contenedor.appendChild(elemento);
+
+          });
+
+        }
+      }
+
+
+      class Editor extends HTMLElement {
+
+        constructor() {
+          super();
+        }
+
+        connectedCallback() {
+          const texto = localStorage.getItem('texto');
+
+          this.innerHTML = `<textarea rows="23">${texto}</textarea>`;
+
+          this.querySelector("textarea").addEventListener("change", function(evento) {
+            localStorage.setItem('texto', event.target.value);
+          });
+        }
+      }
+
+      class Configuracion extends HTMLElement {
+
+        constructor() {
+          super();
+        }
+
+        connectedCallback() {
+          this.innerHTML = `
+            <div class="tc">
+              <p>¡Hola!</p>
+
+              <p>Construí esta aplicación para almacenar y recordar fechas importantes.</p>
+
+              <p>La idea es simple: pones las fechas que quieras recordar y esta aplicación
+              te va a decir cuanto tiempo pasó.</p>
+
+              <p>Si queres saber más, visitá <a href="https://www.examplelab.com.ar/posts/2024-02-23-fechas-importantes-y-aniversarios/" target="_blank">el artículo</a> que escribí.</p>
+
+              <p>También podés estudiar, modificar y republicar este software como
+              quieras, lo podes encontrar en mi <a href="https://github.com/hugoruscitti" target="_blank">github</a>.</p>
+
+              <button onclick="window.location.reload(true)">Recargar</button>
+              <button id="cambiar-tema">Cambiar tema</button>
+            </div>
+          `;
+
+          this.conectarEventos();
+        }
+
+        conectarEventos() {
+          this.querySelector("#cambiar-tema").addEventListener("click", () => {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+          });
+        }
+      }
+
+      customElements.define("x-fechas", Fechas);
+      customElements.define("x-editor", Editor);
+      customElements.define("x-configuracion", Configuracion);
+
+    </script>
+
+
+  
+  </main>
+
+
+</body>
+</html>

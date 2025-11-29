@@ -1,0 +1,33 @@
+.row {
+  border: 1px solid gray;
+  text-align: center;
+  border-radius: 12px;
+  margin-bottom: 1em;
+  background-color: var(--secondary-focus);
+}
+
+button {
+  touch-action: manipulation;
+}
+
+button:active {
+  transform: translate(2px, 2px);
+}
+
+nav {
+  justify-content: center !important;
+}
+
+.container-fluid {
+  padding-top: 0 !important;
+}
+
+textarea {
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: scroll;
+}
+
+.tc {
+  text-align: center;
+}
