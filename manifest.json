@@ -2,7 +2,7 @@
   "name": "Fechas Relativas",
   "short_name": "Fechas",
   "description": "Calculadora de fechas relativas",
-  "start_url": "/",
+  "start_url": "/fechas-relativas/",
   "display": "standalone",
   "background_color": "#1a1a1a",
   "theme_color": "#1a1a1a",
