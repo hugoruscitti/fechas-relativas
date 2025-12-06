@@ -45,6 +45,14 @@
         contenedorDePagina.innerHTML = "<x-fechas></x-fechas>";
       });
 
+
+      // Recarga la página cuando comienza a ser visible nuevamente.
+      window.addEventListener("visibilitychange", function () {
+        if (document.visibilityState === "visible") {
+          window.location.reload();
+        }
+      });
+
     </script>
   </head>
 
@@ -98,12 +106,22 @@
         }
 
         connectedCallback() {
+          this.dibujar();
+        }
+
+        dibujar() {
           var texto = localStorage.getItem('texto') || "";
           var lineas = texto.split("\n");
           var contenedor = this;
           const hoy = new Date().toISOString().split("T")[0];
 
           lineas = lineas.filter(e => e.match(/\d+-\d+-\d+: \w+/));
+
+
+          const elementoFecha = document.createElement("div")
+          const fechaLocal = new Date().toLocaleString();
+          elementoFecha.innerHTML = `<div class="tc"><p>${fechaLocal}</p></div>`
+          contenedor.appendChild(elementoFecha);
 
           lineas.map(linea => {
             const [fecha, detalle] = linea.split(":");
